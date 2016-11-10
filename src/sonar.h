@@ -3,6 +3,4 @@
 
 void initSonar();
 
-
-
 #endif

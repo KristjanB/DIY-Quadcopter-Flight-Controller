@@ -1,11 +1,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "stdlib.h"
-#include "MPU.h"
-#include "UART.h"
-#include "PID.h"
-#include "MAT.h"
-#include "RX.h"
+#include "mpu.h"
+#include "uart.h"
+#include "pid.h"
+#include "mat.h"
+#include "rx.h"
 
 
 // rate pid PITCH/ROLL
@@ -82,9 +82,6 @@ double errSumSx, errSumRx, errSumRz, errSumSy, errSumRy, errSumSz;
 			Kr = constrain(Kr, MAX,MIN);
 			return (Kr + (I * errSumRy) + (D * deltaErrRy));
 		}
-
-
-
 	}
 
 	float stabilizePID(float setpoint, float dt, int axle){

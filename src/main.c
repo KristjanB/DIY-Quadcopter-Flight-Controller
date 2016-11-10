@@ -11,15 +11,15 @@
 #include "inc/hw_types.h"
 #include "driverlib/pin_map.h"
 
-#include "RX.h"
-#include "TIME.h"
-#include "BUZZER.h"
-#include "UART.h"
-#include "I2C.h"
-#include "MPU.h"
-#include "PWM.h"
-#include "MAT.h"
-#include "PID.h"
+#include "rx.h"
+#include "time.h"
+#include "buzzer.h"
+#include "uart.h"
+#include "i2c.h"
+#include "mpu.h"
+#include "pwm.h"
+#include "mat.h"
+#include "pid.h"
 #include "driverlib/timer.h"
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
@@ -35,12 +35,7 @@
 
 #include <string.h>
 
-
-
-
-
 int main()
-
 {
 
  	SysCtlClockSet(SYSCTL_SYSDIV_2_5|SYSCTL_USE_PLL|SYSCTL_OSC_MAIN|SYSCTL_XTAL_16MHZ);
@@ -102,16 +97,10 @@ int main()
 	}
 
     while(1)
-
     {
-
-
     	double now = micros();
     	dtrate = (now - last) / 1e6f;
     	last = now;
-
-
-
 
     	Roll = getRXchannel(RX_ROLL);
     	Pitch = getRXchannel(RX_PITCH);
@@ -134,13 +123,11 @@ int main()
 		YawOut = constrain(YawOut, MAX, MIN);
 		PitchOut = constrain(PitchOut, MAX, MIN);
 
-
     	if(dataReadyMPU()){
 
 			readMPU();
 
 			Throttle = getRXchannel(RX_THROTTLE);
-
 
     		stabilizePitch =stabilizePID(PitchOut, dt, 1);
     		stabilizeRoll = stabilizePID(RollOut, dt, 2);
@@ -167,10 +154,6 @@ int main()
 	 		writeMotorR(motorR);
 	 		writeMotorF(motorF);
 	 		writeMotorB(motorB);
-
 		}
-
-
     }
-
 }
