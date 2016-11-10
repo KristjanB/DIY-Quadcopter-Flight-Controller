@@ -1,14 +1,15 @@
 /*
- * TIME.c
+ * time.c
  *
  *  Created on: 8 Mar 2016
  *      Author: Kristjan
  */
 #include <stdint.h>
 #include <stdbool.h>
-#include "driverlib/systick.h"
-#include "TIME.h"
 
+#include "time.h"
+
+#include "driverlib/systick.h"
 
 volatile long microsec;
 

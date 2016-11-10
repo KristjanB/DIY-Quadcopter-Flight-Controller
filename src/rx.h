@@ -1,5 +1,5 @@
 /*
- * RX.H
+ * rx.h
  *
  *  Created on: 1 Mar 2016
  *      Author: Kristjan

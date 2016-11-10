@@ -1,13 +1,15 @@
 /*
- * SONAR.c
+ * sonar.c
  *
  *  Created on: 1 Nov 2016
  *      Author: Kristjan
  */
 #include <stdint.h>
 #include <stdbool.h>
-#include "BUZZER.h"
-#include "TIME.h"
+
+#include "buzzer.h"
+#include "time.h"
+
 #include "inc/hw_memmap.h"
 #include "inc/hw_ints.h"
 #include "driverlib/gpio.h"

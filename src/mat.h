@@ -1,5 +1,5 @@
 /*
- * MAT.h
+ * mat.h
  *
  *  Created on: 14 May 2016
  *      Author: Kristjan

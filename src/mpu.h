@@ -1,5 +1,5 @@
 /*
- * MPU6050.h
+ * mpu.h
  *
  *  Created on: 18 Apr 2016
  *      Author: Kristjan

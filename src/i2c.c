@@ -10,7 +10,7 @@
 #include "driverlib/gpio.h"
 #include "driverlib/pin_map.h"
 
-#include "I2C.h"
+#include "i2c.h"
 
 
 void initI2C(void)

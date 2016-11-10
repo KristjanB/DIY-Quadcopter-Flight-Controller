@@ -1,9 +1,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "TIME.h"
-#include "PWM.h"
-#include "MAT.h"
+#include "time.h"
+#include "pwm.h"
+#include "mat.h"
 
 #include "inc/hw_memmap.h"
 #include "inc/hw_ints.h"
@@ -77,5 +77,3 @@ void writeMotorF(float value){
 	value = mapf(value, -1000., 1000., 2660, 4660);
 	PWMPulseWidthSet(PWM0_BASE, PWM_OUT_1, value);
 }
-
-

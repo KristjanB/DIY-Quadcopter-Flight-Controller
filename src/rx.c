@@ -1,16 +1,18 @@
 /*
- * RX.c
+ * rx.c
  *
  *  Created on: 1 Mar 2016
  *      Author: Kristjan
  */
 #include <stdint.h>
 #include <stdbool.h>
-#include "BUZZER.h"
-#include "RX.h"
-#include "TIME.h"
-#include "MAT.h"
-#include "PWM.h"
+
+#include "buzzer.h"
+#include "rx.h"
+#include "time.h"
+#include "mat.h"
+#include "pwm.h"
+
 #include "inc/hw_memmap.h"
 #include "inc/hw_ints.h"
 #include "driverlib/gpio.h"

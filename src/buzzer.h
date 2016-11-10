@@ -1,5 +1,5 @@
 /*
- * BUZZER.c
+ * buzzer.c
  *
  *  Created on: 11 Mar 2016
  *      Author: Kristjan

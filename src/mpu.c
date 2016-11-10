@@ -1,16 +1,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "I2C.h"
-#include "TIME.h"
-#include "BUZZER.h"
-#include "MPU.h"
+#include "i2c.h"
+#include "time.h"
+#include "buzzer.h"
+#include "mpu.h"
 
 #include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"
 #include "driverlib/sysctl.h"
 #include "math.h"
-
 
 #define MPU_ADDRESS		0x68 // AD0 pin na 3.3 V in pol je 0x69, cene nevem (oz niti ne dela (?????))
 
@@ -197,20 +196,3 @@ int dataReadyMPU(){
 	int value = GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_2);
 	return value;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

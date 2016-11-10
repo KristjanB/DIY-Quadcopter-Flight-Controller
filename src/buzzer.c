@@ -1,5 +1,5 @@
 /*
- * BUZZER.c
+ * buzzer.c
  *
  *  Created on: 11 Mar 2016
  *      Author: Kristjan
@@ -8,8 +8,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "BUZZER.h"
-#include "TIME.h"
+#include "buzzer.h"
+#include "time.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_ints.h"
 #include "driverlib/gpio.h"
@@ -48,8 +48,6 @@ void MixLed(int R, int G, int B){
 	GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, B);
 	GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, G);
 }
-
-
 
 void BuzzerShort(){
 	GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_1, GPIO_PIN_1);

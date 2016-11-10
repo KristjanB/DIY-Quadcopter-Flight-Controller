@@ -1,5 +1,5 @@
 /*
- * UART.h
+ * uart.h
  *
  *  Created on: 18 Apr 2016
  *      Author: Kristjan

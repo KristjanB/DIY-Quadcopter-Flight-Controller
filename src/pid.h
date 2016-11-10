@@ -1,5 +1,5 @@
 /*
- * PID.h
+ * pid.h
  *
  *  Created on: 12 Oct 2016
  *      Author: Kristjan
