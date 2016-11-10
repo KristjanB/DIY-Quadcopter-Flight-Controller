@@ -43,34 +43,14 @@ void readI2C(uint8_t slave_addr, uint8_t reg, int *data)
 }
 
 
-//		POŠLJE EN BAJT		//
+// Sends 1 byte over i2c
 void writeI2C(uint8_t slave_addr, uint8_t reg, uint8_t data)
 {
 	I2CMasterSlaveAddrSet(I2C0_BASE, slave_addr, false);
 	I2CMasterDataPut(I2C0_BASE, reg);
-	I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_START); // če je en bajt, čene poguglej
+	I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_START);
  	while(I2CMasterBusy(I2C0_BASE));
 	I2CMasterDataPut(I2C0_BASE, data);
 	I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_FINISH);
 	while(I2CMasterBusy(I2C0_BASE));
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
