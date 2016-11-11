@@ -9,13 +9,13 @@
 
 
 // rate pid PITCH/ROLL
-float P = 3.53, // 3
-	  I = 0.0,
-	  D = 1.019; // 0.27
+float 	P = 3.53, // 3
+	I = 0.0,
+	D = 1.019; // 0.27
 
-// stabilize pid ( TEZKA BATERIJA ) PITCH
-float Kp= 0.36,	// gopro- 0.36 //brez 0.441
-	  Ki= 1.255, 	// gopro - 1.255 // brez 1.771
+// stabilize pid ( heavy battery ) PITCH
+float Kp= 0.36,		// gopro- 0.36 //without 0.441
+	 Ki= 1.255, 	// gopro - 1.255 // without 1.771
 	  Kd= 0.;
 
 // rate pid YAW
@@ -28,7 +28,7 @@ float Psz = 0.,
 	  Isz = 0.,
 	  Dsz = 0.;
 
-// stabilize pid (LAHKA BATERIJA)
+// stabilize pid (light battery)
 //float Kp1 = 0.00,
 //	  Ki1 = 0.00,
 //	  Kd1 = 0.00;
@@ -39,11 +39,7 @@ float deltaErrRz = 0, LastErrorRz = 0,  errorRz, deltaErrSz = 0, LastErrorSz = 0
 float MAX = 1000.0f, MIN = -1000.0f;
 double errSumSx, errSumRx, errSumRz, errSumSy, errSumRy, errSumSz;
 	float ratePID(float setpoint, float dt, int axle){
-		// X os
-
-//		UARTprintf("%d  %d \n" ,(int)(Pk*1000), (int)(Ik*1000));
-
-
+		// X axle
 		if(axle == 1){
 			float gyroX = getGyroX() * 57.295f;
 			errorRx = setpoint - gyroX;
@@ -56,11 +52,9 @@ double errSumSx, errSumRx, errSumRz, errSumSy, errSumRy, errSumSz;
 			return (Kr + (I * errSumRx) + (D * deltaErrRx));
 		}
 
-		// Z os
+		// Z axle
 		if(axle == 3){
 			float gyroZ = getGyroZ();
-//			    	UARTprintf("%d \n" ,(int)(gyroZ));
-
 			errorRz = setpoint - gyroZ;
 			errSumRz += errorRz * dt;
 			errSumRz = constrain(errSumRz, MAX, MIN);
@@ -70,7 +64,7 @@ double errSumSx, errSumRx, errSumRz, errSumSy, errSumRy, errSumSz;
 			Kr = constrain(Kr, MAX,MIN);
 			return (Kr + (Irz * errSumRz) + (Drz * deltaErrRz));
 		}
-		// Y os
+		// Y axle
 		else{
 			float gyroY = getGyroY() * 57.295f;
 			errorRy = setpoint - gyroY;
@@ -90,9 +84,7 @@ double errSumSx, errSumRx, errSumRz, errSumSy, errSumRy, errSumSz;
 		Pk = mapf(Pk, -1000., 1000., 0., 2.);
 		float Ik = getRXchannel(RX_AUX2);
 		Ik = mapf(Ik, -1000, 1000, 0., 2.);
-
-
-		// X os
+		// X axle
 		if(axle == 1){
 			float angleX = getMPUangleX() * 57.29577951f;
 			errorSx = setpoint - angleX;	//
@@ -104,7 +96,7 @@ double errSumSx, errSumRx, errSumRz, errSumSy, errSumRy, errSumSz;
 			Kpart = constrain(Kpart, MAX,MIN);
 			return ((Kpart) + (Ki * errSumSx) + (Kd * deltaErrSx));
 		}
-		// Z os
+		// Z axle
 		if(axle == 3){
 			float gyroZ = getGyroZ();
 			errorSz = setpoint - gyroZ;
@@ -116,7 +108,7 @@ double errSumSx, errSumRx, errSumRz, errSumSy, errSumRy, errSumSz;
 			Kr = constrain(Kr, MAX,MIN);
 			return (Kr + (Isz * errSumRz) + (Dsz * deltaErrRz));
 		}
-		// Y os
+		// Y axle
 		else{
 			float angleY = getMPUangleY() * 57.29577951f;
 			errorSy = setpoint - angleY;	//
