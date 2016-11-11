@@ -4,19 +4,29 @@ Hey guys!
 This is a project page of my quadcopter FC build. I'm using Texas Instruments Tiva C TM4C123G microcontroller. 
 Quadcopter was built from various parts I found on Hobbyking. I think part names don't matter, 
 so I'll just post the most important info about them.
+Few notes about quadcopter itself. 
+-In code under pid.c you'll see that there are a lot of different PID values. (Note that 
+  my values are far from perfect and will be changed)
+  To explain in a quick way, I use the same values for both roll rate PID and pitch rate PID. However, I have two sets of these
+  values in case I'm using GoPro or not. For stabilize PID I use different values for roll stabilize PID and pitch stabilize PID,
+  because as said in notes below, weight is often (and in my case it is) distributed differently on each axis. So it's kind of 
+  a must to use different values. And here I also use two sets of values in case of GoPro. (I'll write more about PID in        
+  designated file)
 
 In the end of this file I'll post some notes and tricks that I learned by trial and error. I hope they help you! 
 
-|           |             |       |
-| --------- | ----------- | ----- |
-| Props:    | 10x4.5 |
-| Motors:   | 950kV |
-| Battery:  | 5200mAh |
-| ESC:      | Afro ESC or any ESC that has 1000Hz refresh rate |
-| Frame:    | 550X from Hobbyking |
-| TX/RX:    | Turnigy TGY-i6 and iA6 6 channel reciever |
-| Acc/Gyro: | MPU6050 |
-| Sonar:    | HC-SR04 |
+Also if you have a question, mail me at kristjan.berce@gmail.com
+
+|           |                                                   |       
+| --------- | ------------------------------------------------- |  
+| Props:    | 10x4.5                                            |
+| Motors:   | 950kV                                             |
+| Battery:  | 5200mAh                                           |
+| ESC:      | Afro ESC or any ESC that has 1000Hz refresh rate  |
+| Frame:    | 550X from Hobbyking                               |
+| TX/RX:    | Turnigy TGY-i6 and iA6 6 channel reciever         |
+| Acc/Gyro: | MPU6050                                           |
+| Sonar:    | HC-SR04                                           |
 
 Quad flies in x-config.
 
