@@ -7,118 +7,126 @@
 #include "mat.h"
 #include "rx.h"
 
+#define PID_TUNING		1
 
 // rate pid PITCH/ROLL
-float 	P = 3.53, // 3
-	I = 0.0,
-	D = 1.019; // 0.27
+float 	P = 2.01;
 
 // stabilize pid ( heavy battery ) PITCH
-float Kp= 0.36,		// gopro- 0.36 //without 0.441
-	 Ki= 1.255, 	// gopro - 1.255 // without 1.771
-	  Kd= 0.;
+float Kp= 8,		// gopro- 0.36 //without 3.18
+	 Ki= 0.01; 	// gopro - 1.255 // without 0.065
 
 // rate pid YAW
-float Prz = 3.,
-	  Irz = 0.95,
-	  Drz = 0.;
+float Prz = 12.32,
+	  Irz = 17.25;
 
-// stabilize pid YAW
-float Psz = 0.,
-	  Isz = 0.,
-	  Dsz = 0.;
 
-// stabilize pid (light battery)
-//float Kp1 = 0.00,
-//	  Ki1 = 0.00,
-//	  Kd1 = 0.00;
-
-float deltaErrSx = 0, LastErrorSx = 0,  errorSx, deltaErrSy = 0, LastErrorSy = 0,  errorSy;
-float deltaErrRx = 0, LastErrorRx = 0,  errorRx, deltaErrRy = 0, LastErrorRy = 0,  errorRy ;
-float deltaErrRz = 0, LastErrorRz = 0,  errorRz, deltaErrSz = 0, LastErrorSz = 0,  errorSz;
+float LastErrorSx = 0,  errorSx, LastErrorSy = 0,  errorSy;
+float errorRx, errorRy;
+float LastErrorRz = 0,  errorRz;
 float MAX = 1000.0f, MIN = -1000.0f;
-double errSumSx, errSumRx, errSumRz, errSumSy, errSumRy, errSumSz;
-	float ratePID(float setpoint, float dt, int axle){
-		// X axle
+double errSumSx, errSumRz, errSumSy;
+
+float Pk=0, Ik = 0;
+
+
+
+float ratePID(float setpoint, float dt, int axle){
+// X axle
 		if(axle == 1){
-			float gyroX = getGyroX() * 57.295f;
+			float gyroX = getGyroX();
 			errorRx = setpoint - gyroX;
-			errSumRx += errorRx * dt;
-			errSumRx = constrain(errSumRx, MAX, MIN);
-			deltaErrRx = (errorRx - LastErrorRx) / dt;
-			LastErrorRx = errorRx;
 			float Kr = P * errorRx;
 			Kr = constrain(Kr, MAX,MIN);
-			return (Kr + (I * errSumRx) + (D * deltaErrRx));
+			return Kr;
 		}
 
 		// Z axle
-		if(axle == 3){
-			float gyroZ = getGyroZ();
-			errorRz = setpoint - gyroZ;
-			errSumRz += errorRz * dt;
-			errSumRz = constrain(errSumRz, MAX, MIN);
-			deltaErrRz = (errorRz - LastErrorRz) / dt;
-			LastErrorRz = errorRz;
-			float Kr = Prz * errorRz;
-			Kr = constrain(Kr, MAX,MIN);
-			return (Kr + (Irz * errSumRz) + (Drz * deltaErrRz));
-		}
+		 if(axle == 3){
+		 	float gyroZ = getGyroZ();
+		 	errorRz = setpoint - gyroZ;
+		 	errSumRz += errorRz * dt;
+		 	errSumRz = constrain(errSumRz, MAX, MIN);
+		 	float Kr = Prz * errorRz;
+		 	Kr = constrain(Kr, MAX,MIN);
+		 	return (Kr + (Irz* errSumRz));
+		 }
 		// Y axle
 		else{
-			float gyroY = getGyroY() * 57.295f;
+			float gyroY = getGyroY();
 			errorRy = setpoint - gyroY;
-			errSumRy += errorRy * dt;
-			errSumRy = constrain(errSumRy, MAX, MIN);
-			deltaErrRy = (errorRy - LastErrorRy) / dt;
-			LastErrorRy = errorRy;
 			float Kr = P * errorRy;
 			Kr = constrain(Kr, MAX,MIN);
-			return (Kr + (I * errSumRy) + (D * deltaErrRy));
+			return Kr;
 		}
 	}
 
-	float stabilizePID(float setpoint, float dt, int axle){
+float stabilizePID(float setpoint, float dt, int axle){
+#if PID_TUNING
+	Pk = getRXchannel(RX_AUX1);
+	Pk = mapf(Pk, -1000., 1000., 0., 15.);
+	Ik = getRXchannel(RX_AUX2);
+	Ik = mapf(Ik, -1000, 1000, 0., 0.5);
+#endif
 
-		float Pk = getRXchannel(RX_AUX1);
-		Pk = mapf(Pk, -1000., 1000., 0., 2.);
-		float Ik = getRXchannel(RX_AUX2);
-		Ik = mapf(Ik, -1000, 1000, 0., 2.);
 		// X axle
 		if(axle == 1){
-			float angleX = getMPUangleX() * 57.29577951f;
+			float angleX = getMPUangleX();
 			errorSx = setpoint - angleX;	//
 			errSumSx += errorSx * dt;
 			errSumSx = constrain(errSumSx, MAX, MIN);
-			deltaErrSx = (errorSx - LastErrorSx) / dt;
-			LastErrorSx = errorSx;
-			float Kpart = Kp * errorSx;
+			float Kpart = Kp* errorSx;
 			Kpart = constrain(Kpart, MAX,MIN);
-			return ((Kpart) + (Ki * errSumSx) + (Kd * deltaErrSx));
+			return ((Kpart) + (Ki* errSumSx));
 		}
-		// Z axle
-		if(axle == 3){
-			float gyroZ = getGyroZ();
-			errorSz = setpoint - gyroZ;
-			errSumSz += errorSz * dt;
-			errSumSz = constrain(errSumSz, MAX, MIN);
-			deltaErrSz = (errorSz - LastErrorSz) / dt;
-			LastErrorSz = errorSz;
-			float Kr = Psz * errorSz;
-			Kr = constrain(Kr, MAX,MIN);
-			return (Kr + (Isz * errSumRz) + (Dsz * deltaErrRz));
-		}
-		// Y axle
+
 		else{
-			float angleY = getMPUangleY() * 57.29577951f;
+			float angleY = getMPUangleY();
 			errorSy = setpoint - angleY;	//
 			errSumSy += errorSy * dt;
 			errSumSy = constrain(errSumSy, MAX, MIN);
-			deltaErrSy = (errorSy - LastErrorSy) / dt;
-			LastErrorSy = errorSy;
-			float Kpart = Pk * errorSy;
+			float Kpart = Kp * errorSy;
 			Kpart = constrain(Kpart, MAX,MIN);
-			return ((Kpart) + (Ik * errSumSy) + (Kd* deltaErrSy));
+			return ((Kpart) + (Ki * errSumSy));
 		}
 
-	}
+}
+
+float SonarError;
+float Kp_sonar = 0.00;
+
+float altitudeholdSonarPID(float setpoint, float dt){
+	float distance = getSonarActualDistance();
+	SonarError = setpoint - distance;
+	return (Kp_sonar * SonarError);
+}
+
+
+float AccError, AccErrorSum, AccErrorDelta, AccErrorLast;
+float Kp_acc = 0.00,
+	  Ki_acc = 0.00,
+	  Kd_acc = 0.00;
+
+float altitudeholdAccPID(float setpoint, float dt){
+	float acc = getAccZ();
+	AccError = setpoint - acc;
+	AccErrorSum += AccError * dt;
+	AccErrorSum  = constrain(AccErrorSum, MAX, MIN);
+	AccErrorDelta = (AccError - AccErrorLast) / dt;
+	AccErrorLast = AccError;
+	return (Kp_acc * AccError) +
+		   (Ki_acc * AccErrorSum) +
+		   (Kd_acc * AccErrorDelta);
+}
+
+
+void resetPID(){
+	 errorSy = 0, errorSx = 0, errorRx = 0, errorRy = 0, errorRz = 0;
+	 errSumSx = 0, errSumRz = 0, errSumSy = 0;
+	 AccError = 0, AccErrorDelta = 0, AccErrorSum = 0, AccErrorLast = 0;
+}
+
+
+
+
+

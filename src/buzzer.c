@@ -23,7 +23,7 @@ void initBuzzer(){
 	  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
 	  SysCtlDelay(3);
 	  GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_3|GPIO_PIN_2|GPIO_PIN_1);
-//	  GPIOPinTypeGPIOOutput(GPIO_PORTE_BASE, GPIO_PIN_1);
+	  GPIOPinTypeGPIOOutput(GPIO_PORTE_BASE, GPIO_PIN_1);
 
 }
 
@@ -49,16 +49,15 @@ void MixLed(int R, int G, int B){
 	GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, G);
 }
 
+
 void BuzzerShort(){
-	GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_1, GPIO_PIN_1);
-	Delay(500000);
-	GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_1, 0);
-	Delay(500000);
+		GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_1, GPIO_PIN_1);
+		Delay(400000);
+		GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_1, 0);
 }
 
 void BuzzerLong(){
-	GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_1, GPIO_PIN_1);
-	Delay(1500000);
-	GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_1, 0);
-	Delay(1500000);
+		GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_1, GPIO_PIN_1);
+		Delay(1500000);
+		GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_1, 0);
 }

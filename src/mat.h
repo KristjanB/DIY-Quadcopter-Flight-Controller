@@ -11,5 +11,6 @@
 
 float mapf(float x, float in_min, float in_max, float out_min, float out_max);
 float constrain(float value, float max, float min);
+float LowPassFilter(float RawData);
 
 #endif /* MAT_H_ */

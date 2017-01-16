@@ -12,6 +12,7 @@
 #include "driverlib/gpio.h"
 #include "driverlib/pin_map.h"
 #include "driverlib/uart.h"
+#include "utils/uartstdio.h"
 
 
 void initUart(void){

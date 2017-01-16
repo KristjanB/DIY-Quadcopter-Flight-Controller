@@ -1,4 +1,5 @@
 
+#include <ppm.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "stdlib.h"
@@ -11,15 +12,18 @@
 #include "inc/hw_types.h"
 #include "driverlib/pin_map.h"
 
+#include "altitudehold.h"
+#include "sonar.h"
 #include "rx.h"
 #include "time.h"
 #include "buzzer.h"
 #include "uart.h"
 #include "i2c.h"
 #include "mpu.h"
-#include "pwm.h"
 #include "mat.h"
 #include "pid.h"
+#include "gimbal.h"
+
 #include "driverlib/timer.h"
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
@@ -30,130 +34,232 @@
 #include "driverlib/pwm.h"
 #include "driverlib/ssi.h"
 #include "driverlib/systick.h"
-
 #include "utils/uartstdio.c"
-
 #include <string.h>
 
-int main()
-{
+
+#define MIN_YAW_SCALE -100.f // Max and Min rate of yaw
+#define MAX_YAW_SCALE 100.f
+
+// Program stuff...
+#define CALIBRATE_ESC 	            0	// 1 -> To calibrate motors
+#define REMOTE     		            1 	// 0 -> For debugging, so you don't need the remote
+
+// Flight stuff...
+#define FLIGHT_MODE_STAB 			0
+#define FLIGHT_MODE_RATE            1
+#define FLIGHT_MODE_ALTHOLD			0
+
+#define COME_TO_PAPA				0   // 1 -> Shuts down motors when there is your hand under it.
+#define KILL_SWITCH					1	  // 1 -> ON,                      not yet implemented
+#define FRONT_OBSTACLE_AVOIDANCE	0
+
+#if FLIGHT_MODE_STAB
+float MAX_TX_SCALE = 35.f; // Max and Min angle of quadcopter
+float MIN_TX_SCALE = -35.f;
+#endif
+
+#if FLIGHT_MODE_RATE
+float MAX_TX_SCALE = 100.f; // Max and Min angle of quadcopter
+float MIN_TX_SCALE = -100.f;
+#endif
+
+int main(){
 
  	SysCtlClockSet(SYSCTL_SYSDIV_2_5|SYSCTL_USE_PLL|SYSCTL_OSC_MAIN|SYSCTL_XTAL_16MHZ);
-
- 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
- 	GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_4);
     initTime();
 	initUart();
+	initPWM();
 	initI2C();
 	initMPU6050();
-	initPWM();
 	initRX();
 	initBuzzer();
+	initSonar();
 	MPUtestConnection();
 	IntMasterEnable();
 	SysCtlDelay(3);
-
-	float MAX = 1000.0f, MIN = -1000.0f;
-	float  	stabilizePitch = 0,
-			PitchOut = 0,
-			Pitch,
-			stabilizeRoll = 0,
-			RollOut = 0,
-			Roll = 0,
+	float 	MAX = 1000.0f, MIN = -1000.0f;
+	float	stabPitch = 0,
+			PitchAngle,
+			stabRoll = 0,
+			RollAngle,
 			Yaw = 0,
-			YawOut = 0,
-			stabilizeYaw = 0,
 			Throttle;
-	int		R = 0x2,
-	 	 	G = 0x8,
-	 	 	B = 0x4;
-	float 	motorF,
-			motorB,
-			motorR,
-			motorL;
+	float 	motor1, motor2, motor3, motor4;
     float 	dtrate;
 	double 	last = 0;
 	float 	dt = 0.001;
-	int blueled = true;
-	int greenled = false;
-	int k = 1;
+	float 	rateRoll, ratePitch, rateYaw;
+	float 	maxX=0, maxY=0;
 
-//*******ESC CALIBRATION ROUTINE *******//
-////
-//	writeMotorL(MAX);
-//	writeMotorR(MAX);
-//	writeMotorB(MAX);
-//	writeMotorF(MAX);
-//	Delay(5000000);
-//	writeMotorR(MIN);
-//	writeMotorL(MIN);
-//	writeMotorB(MIN);
-//	writeMotorF(MIN);
-//	Delay(5000000);
 
-	while(!isArmed())	// Wait untill pilot arms quadcopter with remote
-	{
 
-	}
 
-    while(1)
+#if CALIBRATE_ESC
+	writeMotor1(MAX);
+	writeMotor2(MAX);
+	writeMotor3(MAX);
+	writeMotor4(MAX);
+	Delay(5000000);
+	writeMotor1(MIN);
+	writeMotor2(MIN);
+	writeMotor3(MIN);
+	writeMotor4(MIN);
+	Delay(5000000);
+#endif
+
+#if REMOTE
+	while(!isArmed()){
+
+	}	// Wait until pilot arms quadcopter with remote
+#endif
+
+
+
+	while(1)
     {
+
+
+     	RollAngle = getRXchannel(RX_ROLL);
+     	PitchAngle = getRXchannel(RX_PITCH);
+     	Yaw = getRXchannel(RX_YAW);
+        Throttle = getRXchannel(RX_THROTTLE);
+//
+//        triggerGroundSonar();
+//        float distance = getSonarActualDistance();
+//        UARTprintf("%d  \n", (int)(distance));
+
+#if FLIGHT_MODE_ALTHOLD
+
+#endif
+
+
+// This uses AUX2
+#if KILL_SWITCH
+        int kill = getRXchannel(RX_AUX2);
+        if(kill > 0){
+        	while(1){
+				writeMotorsOFF();
+				MixLed(0x02, 0x08, 0);
+				BuzzerShort();
+				Delay(500000);
+				MixLed(0, 0, 0);
+				BuzzerShort();
+				Delay(300000);
+		        int notkill = getRXchannel(RX_AUX2);
+        		if(notkill < -900){
+            		resetPID();
+            		break;
+        		}
+        	}
+        }
+#endif
+
+
+// This uses AUX1
+#if COME_TO_PAPA
+		triggerGroundSonar();
+		float distance = getGroundSonar();
+        uint32_t ValueTreshold = millis();
+        int turnon = getRXchannel(RX_AUX1);
+		if(distance > 0 && ValueTreshold > 1000 && turnon > 0){
+			if(distance <= 15){
+				BuzzerShort();
+				while(1){
+					writeMotorsOFF();
+					MixLed(0x02, 0x08, 0x04);
+					Delay(700000);
+					MixLed(0, 0, 0);
+					Delay(300000);
+			        int turnoff = getRXchannel(RX_AUX1);
+					if(turnoff < 0){
+						resetPID();
+						break;
+					}
+				}
+			}
+		}
+#endif
+
+#if FRONT_OBSTACLE_AVOIDANCE
+		triggerGroundSonar();
+		int turnon = 1; //getRXchannel(RX_AUX1);
+		if(turnon > 0){
+			float ObstacleDistance = getGroundSonar();
+			if(ObstacleDistance <= 50){
+
+			}
+		   // UARTprintf("%d \n", (int)(ObstacleDistance));
+
+		}
+
+#endif
+
+//    	float  maxAngle=100.0;
+//    	maxY = getMPUangleY();
+//    	maxX = getMPUangleX();
+//    	if(maxX > maxAngle || maxY > maxAngle || maxX < -maxAngle || maxY < -maxAngle){
+//    		writeMotorsOFF();
+//    		while(1){
+//    			//BuzzerShort();
+//    			BlueLed(true);
+//    			Delay(500000);
+//    			BlueLed(false);
+//    			Delay(100000);
+//    		}
+//    	}
+
     	double now = micros();
     	dtrate = (now - last) / 1e6f;
     	last = now;
 
-    	Roll = getRXchannel(RX_ROLL);
-    	Pitch = getRXchannel(RX_PITCH);
-    	Yaw = getRXchannel(RX_YAW);
+        Yaw = mapf(Yaw, MIN, MAX, MIN_YAW_SCALE, MAX_YAW_SCALE);
+        Yaw = constrain(Yaw, MAX_YAW_SCALE, MIN_YAW_SCALE);
+	    RollAngle = mapf(RollAngle, MIN, MAX,MIN_TX_SCALE , MAX_TX_SCALE);
+	    RollAngle = constrain(RollAngle, MAX_TX_SCALE, MIN_TX_SCALE);
+	    PitchAngle = mapf(PitchAngle, MIN, MAX, MIN_TX_SCALE, MAX_TX_SCALE);
+	 	PitchAngle = constrain(PitchAngle, MAX_TX_SCALE, MIN_TX_SCALE);
 
-//    	UARTprintf("%d %d %d\n" ,(int)(Yaw), (int)(Roll), (int)(Pitch));
-    	Yaw = mapf(Yaw, MIN, MAX, 250.f, -250.f);
-		Roll = mapf(Roll, MIN, MAX, 80.f, -80.f);
-		Pitch = mapf(Pitch, MIN, MAX, -80.f, 80.f);
+#if FLIGHT_MODE_STAB
+	 	stabPitch = stabilizePID(PitchAngle, dtrate, 1);
+	 	stabRoll = stabilizePID(RollAngle, dtrate, 2);
+	 	stabPitch = constrain(stabPitch, MAX, MIN);
+	 	stabRoll = constrain(stabRoll, MAX, MIN);
+#endif
 
-		Yaw = constrain(Yaw, 250., -250.);
-		Roll = constrain(Roll, 80., -80.);
-		Pitch = constrain(Pitch, 80., -80.);
-
-		YawOut = ratePID(Yaw, dtrate, 3);
-		PitchOut = ratePID(Pitch, dtrate, 1);
-		RollOut = ratePID(Roll, dtrate, 2);
-
-		RollOut = constrain(RollOut, MAX, MIN);
-		YawOut = constrain(YawOut, MAX, MIN);
-		PitchOut = constrain(PitchOut, MAX, MIN);
-
-    	if(dataReadyMPU()){
+	 	// *****************   1 KHz loop time   ********************** //
+     	if(dataReadyMPU()){
 
 			readMPU();
 
-			Throttle = getRXchannel(RX_THROTTLE);
+#if FLIGHT_MODE_RATE
+			stabPitch = PitchAngle;
+			stabRoll = RollAngle;
+#endif
 
-    		stabilizePitch =stabilizePID(PitchOut, dt, 1);
-    		stabilizeRoll = stabilizePID(RollOut, dt, 2);
-    		stabilizeYaw = stabilizePID(YawOut, dt, 3);
+			ratePitch = ratePID(stabPitch, dt, 1);
+			rateRoll = ratePID(stabRoll, dt, 2);
+			rateYaw = ratePID(Yaw, dt, 3);
 
-    		stabilizeRoll = constrain(stabilizeRoll, MAX, MIN);
-    		stabilizePitch = constrain(stabilizePitch, MAX, MIN);
-    		stabilizeYaw = constrain(stabilizeYaw, MAX, MIN);
+			rateRoll = constrain(rateRoll, MAX, MIN);
+			ratePitch = constrain(ratePitch, MAX, MIN);
+			rateYaw = constrain(rateYaw, MAX, MIN);
 
-//    		    	UARTprintf("%d %d %d\n" ,(int)(Yaw), (int)(Roll), (int)(Pitch));
-//    		UARTprintf("%d \n", (int)(YawOut));
 
-			motorF = Throttle - stabilizeRoll - stabilizePitch + YawOut;
-    		motorR =  Throttle + stabilizeRoll - stabilizePitch - YawOut;
-    		motorB = Throttle + stabilizeRoll + stabilizePitch + YawOut;
-    		motorL = Throttle - stabilizeRoll +stabilizePitch - YawOut;
+			motor4 = Throttle - rateRoll - ratePitch - rateYaw;
+			motor2 = Throttle + rateRoll - ratePitch + rateYaw;
+			motor3 = Throttle - rateRoll + ratePitch + rateYaw;
+			motor1 = Throttle + rateRoll + ratePitch - rateYaw;
 
-    		motorR = constrain(motorR, 1000.0f, -1000.0f);
-    		motorL = constrain(motorL, 1000.0f, -1000.0f);
-    		motorF = constrain(motorF, 1000.0f, -1000.0f);
-    		motorB = constrain(motorB, 1000.0f, -1000.0f);
+			motor2 = constrain(motor2, MAX, MIN);
+			motor1 = constrain(motor1, MAX, MIN);
+			motor4 = constrain(motor4, MAX, MIN);
+			motor3 = constrain(motor3, MAX, MIN);
 
-			writeMotorL(motorL);
-	 		writeMotorR(motorR);
-	 		writeMotorF(motorF);
-	 		writeMotorB(motorB);
-		}
-    }
+			writeMotor1(motor1);
+			writeMotor2(motor2);
+			writeMotor4(motor4);
+			writeMotor3(motor3);
+	 }
+  }
 }

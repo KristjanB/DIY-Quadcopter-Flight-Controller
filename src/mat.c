@@ -20,3 +20,14 @@ float constrain(float value, float max, float min)
 	if(value<min) value = min;
 	return value;
 }
+
+
+float Output, PrevOutput = 0;
+float Beta = 0.8; // 0<ß<1
+
+float LowPassFilter(float RawData){
+
+	   Output=PrevOutput*Beta+RawData*(1-Beta);
+		PrevOutput = Output;
+       return Output;
+}

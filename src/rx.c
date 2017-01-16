@@ -4,15 +4,15 @@
  *  Created on: 1 Mar 2016
  *      Author: Kristjan
  */
+#include <ppm.h>
 #include <stdint.h>
 #include <stdbool.h>
+
 
 #include "buzzer.h"
 #include "rx.h"
 #include "time.h"
 #include "mat.h"
-#include "pwm.h"
-
 #include "inc/hw_memmap.h"
 #include "inc/hw_ints.h"
 #include "driverlib/gpio.h"
@@ -149,23 +149,30 @@ void initRX(){
 }
 
 float getRXchannel(rxChannel_e channel){
-	float value = mapf(rxChannel[channel], 1009, 2000, -1000.f, 1000.f);
-//	 float value = rxChannel[channel];
-	return value;		// CHECK MAX AND MIN RANGE OF TRANSMITTER!!!!!!!! mapf(rxChannel[channel], 1034, 2022, -100.0f, 100.0f);
+	float value = rxChannel[channel] ;
+	value = mapf(value, 1010, 2000, -1000.f, 1000.f);
+	value = constrain(value, 1000.f, -1000.f);
+	return value;
+//	float filteredValue = LowPassFilter(value);
+//	filteredValue = mapf(filteredValue, 1010, 2000, -1000.f, 1000.f);
+//	filteredValue = constrain(filteredValue, 1000.f, -1000.f);
+//	return filteredValue;		// CHECK MAX AND MIN RANGE OF TRANSMITTER!!!!!!!! mapf(rxChannel[channel], 1034, 2022, -100.0f, 100.0f);
 }
 
+
+
+
+// ARM routine. Write Lowest value to motors to arm them.
 int isArmed(){
 	float value;
 	float T = getRXchannel(RX_THROTTLE);
 	float Y = getRXchannel(RX_YAW);
-	if((T < -950) && (Y > 950)){
+	if((T < -950.) && (Y > 950.)){
 		value = 1;
-		writeMotorR(-1000.);
-		writeMotorL(-1000.);
-		writeMotorB(-1000.);
-		writeMotorF(-1000.);
+		Delay(500000);
+        writeMotorsOFF(); // Arm and off is the same. OR IS IT?! I don't know.
 		RedLed(true);
-		Delay(3000000);
+		Delay(500000);
 		RedLed(false);
 		return value;
 	}
@@ -173,6 +180,5 @@ int isArmed(){
 		value = 0;
 		return value;
 	}
-
 }
 

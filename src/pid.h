@@ -10,7 +10,8 @@
 
 float ratePID(float setpoint, float dt, int axle);
 float stabilizePID(float setpoint, float dt, int axle);
-
+void resetPID();
+float altitudeholdSonarPID(float setpoint, float dt);
 
 
 #endif /* PID_H_ */
