@@ -1,3 +1,9 @@
+Version 0.0.2
+    - Code is fully functioning
+    - Altitude Hold and Gimbal files added, but code is not yet written
+    - Updated to the latest version
+
+
 Version 0.0.1
     - Code is fully functioning.
     - Sonar.c and Sonar.h are added but code has not yet been implemented.
